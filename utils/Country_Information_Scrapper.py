@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, io
 
 #'/home/user/example/parent/child'
 current_path = os.path.abspath('.')
@@ -50,36 +50,56 @@ class Country_Information_Scrapper(object):
         for c in all_countries:
             name_header = c.find("h2")
             name_of_country = name_header.text
-
+            exiled_countries = ["Cape Verde","Mauritius","The Seychelles","South Sudan","Andorra","Kosovo","Liechtenstein","Luxembourg"
+            ,"Monaco","San Marino","The Vatican City","Maldives","The Republic of China"]
+            if name_of_country in exiled_countries:
+                continue
             cap_pop_area = c.find("aside").find("dl").find_all("dd")
 
             image_div = c.find("div")
             image_url = "https:" + image_div.find("img")['src']
 
             """This section gets the image of the flags from flagpedia.net! Shout outttt"""
-            flag_file_name = name_of_country + "-flag"
+            """flag_file_name = name_of_country + "-flag"
             with open(flag_file_name,'wb') as f:
                 f.write(urllib.request.urlopen(image_url).read())
-                image_flag = Image.open(flag_file_name)
-
+                image_flag = Image.open(flag_file_name)"""
+            with urllib.request.urlopen(image_url) as f:
+                b = io.BytesIO(f.read())
+                image_flag = Image.open(b)
             """Automatically adds path to the geology.com website. Shout out to geology.com!"""
-            geographical_location_image_url_specifier = name_of_country.lower().replace(" ", "-").replace("the","") + ".gif"
+            geographical_location_image_url_specifier = name_of_country.replace("The ","").lower().replace(" ", "-") + ".gif"
             geographical_location_image_url = "https://geology.com/world/map/map-of-"+geographical_location_image_url_specifier
+
+
+            """Just some differences between the two websites"""
             if name_of_country == "Cote d'Ivoire":
                 geographical_location_image_url = "https://geology.com/world/map/map-of-"+"ivory-coast.gif"
+            if name_of_country == "The Gambia":
+                geographical_location_image_url = "https://geology.com/world/map/map-of-"+"the-gambia.gif"
+            if name_of_country == "Myanmar":
+                geographical_location_image_url = "https://geology.com/world/map/map-of-"+"burma.gif"
+            if name_of_country == "The People's Republic of China":
+                geographical_location_image_url = "https://geology.com/world/map/map-of-"+"china.gif"
+
+
+
 
             location_file_name = name_of_country + "-location"
-            with open(location_file_name,'wb') as f:
+            """with open(location_file_name,'wb') as f:
                 f.write(urllib.request.urlopen(image_url).read())
-                image_location = Image.open(location_file_name)
+                image_location = Image.open(location_file_name)"""
+            with urllib.request.urlopen(geographical_location_image_url) as f:
+                b = io.BytesIO(f.read())
+                image_location = Image.open(b)
 
             country = gi.Country(name_of_country,image_flag,image_location,cap_pop_area[0].text,cap_pop_area[1].text,
             cap_pop_area[2].text)
-            print(name_of_country = "Finished!\n")
+            print(name_of_country + " Finished!\n")
 
 
 
 
 cis = Country_Information_Scrapper()
-Africa = gi.Continent("Africa")
+Africa = gi.Continent("Asia")
 cis.extract_all_country_information_from_continent(Africa)
